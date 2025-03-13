@@ -1,0 +1,24 @@
+name: make_inference
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pystac
+  - pystac-client
+  - python
+  - numpy
+  - types-PyYAML
+  - pyYAML
+  - python-box
+  - pip
+  - pip:
+    - tf2onnx
+    - georeader-spaceml
+    - rasterio
+    - loguru
+    - tqdm
+    - click
+    - rio_stac
+    - onnxmltools
+    - onnxruntime
+    - onnx
