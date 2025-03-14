@@ -15,11 +15,11 @@ serviceAccount = "kaniko-sa"
 registry = "ghcr.io/eoap"
 secret = "kaniko-secret"
 
-[tools.tile_sat_training]
+[tools.training]
 context = "training/make-ml-model"
 path = "training/app-package/tile-sat-training.cwl#tile-sat-training"
 
 
-[tools.tile_sat_inference]
+[tools.inference]
 context = "inference/make-inference"
 path = "inference/app-package/tile-sat-inference.cwl#tile-sat-inference"
