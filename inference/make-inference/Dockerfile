@@ -3,41 +3,30 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV APP_ENV=make_inference
 
 SHELL ["/bin/bash", "-c"]
-RUN apt-get update -yq                                                                                                      && \
-    apt-get install -y ca-certificates ttf-dejavu file wget bash bzip2 sudo                                                 && \
-    apt-get clean autoremove --yes                                                                                     && \
-    rm -rf /var/lib/{apt,dpkg,cache,log}
 
+# Update package lists and install necessary utilities
+RUN apt-get update -y && \
+    apt-get install -y curl tar bzip2 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-ARG USERNAME=linus
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+# Install micromamba
+RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest -o /tmp/micromamba.tar.bz2 && \
+    bzip2 -t /tmp/micromamba.tar.bz2 && \
+    tar -xvjf /tmp/micromamba.tar.bz2 -C /tmp && \
+    mv /tmp/bin/micromamba /bin/micromamba
 
-# Create the user
-RUN groupadd --gid $USER_GID $USERNAME                                                                                      && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME                                                                    && \
-    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME                                                     && \
-    chmod 0440 /etc/sudoers.d/$USERNAME
+# Initialize micromamba
+RUN micromamba shell init -s zsh
 
-USER $USERNAME
-WORKDIR /home/$USERNAME
-RUN echo $PATH
-ENV BASH_ENV=~/.bashrc
+# Set up the environment
 ENV MAMBA_ROOT_PREFIX=/home/$USERNAME/conda
 ENV PATH=$PATH:/home/$USERNAME/conda/envs/$APP_ENV/bin:/home/$USERNAME/conda/envs/$APP_ENV/snap/bin
-RUN echo $PATH
-COPY --from=docker.io/mambaorg/micromamba:alpine /bin/micromamba /bin/micromamba
-RUN micromamba shell init -s zsh -p ~/micromamba
 
+# Copy application files
 COPY --chown=$USERNAME:$USER_GID . /tmp
 
-RUN micromamba create -f /tmp/environment.yml                                                                               && \
-    cd /tmp                                                                                                                 && \
+# Create the environment and install dependencies
+RUN micromamba create -f /tmp/environment.yml && \
+    cd /tmp && \
     $MAMBA_ROOT_PREFIX/envs/$APP_ENV/bin/python setup.py install
-    #sudo rm -fr $MAMBA_ROOT_PREFIX/pkgs
-    #sudo rm -fr /tmp/*
-
-# Activate environment
-ENV CONDA_DEFAULT_ENV=$APP_ENV
-ENV ENV_NAME=$APP_ENV
-ENV CONDA_PROMPT_MODIFIER=($APP_ENV)

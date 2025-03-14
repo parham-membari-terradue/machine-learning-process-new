@@ -3,11 +3,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - python=3.8
+  - numpy
   - pystac
   - pystac-client
-  - python
-  - numpy
-  - types-PyYAML
   - pyYAML
   - python-box
   - pip
