@@ -13,7 +13,7 @@ registry="ghcr.io/eoap"
 namespace = "tile-based-training"
 serviceAccount = "calrissian-sa"
 registry = "ghcr.io/eoap"
-secret = "kaniko-secret"
+secret = "ttl-secret"
 
 [tools.tile_sat_training]
 context = "training/make-ml-model"
