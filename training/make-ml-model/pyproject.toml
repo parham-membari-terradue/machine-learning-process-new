@@ -17,10 +17,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
 dependencies = []  
@@ -72,7 +68,7 @@ dependencies = [
     "joblib",
     "pyYAML",
     "python-box",
-    "tensorflow[and-cuda]",
+    "tensorflow",
     "mlflow",
     "seaborn",
     "rasterio",
@@ -96,7 +92,7 @@ dependencies = [
 train = "python -m tile_based_training.main"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12"]
+python = ["3.10"]
 
 # Coverage settings
 [tool.coverage.run]

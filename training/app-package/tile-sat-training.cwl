@@ -171,7 +171,7 @@ $graph:
         ramMax: 1600
     hints:
       DockerRequirement:
-        dockerPull: tile_sat_training:latest 
+        dockerPull: training:latest 
         
     baseCommand: ["tile-based-training"]
     arguments: 

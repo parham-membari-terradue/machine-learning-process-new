@@ -1,7 +1,6 @@
 from tile_based_training.config.configuration import ConfigurationManager
 from tile_based_training.components.prepare_base_model import PrepareBaseModel
 from tile_based_training import logger
-import tensorflow as tf
 
 STAGE_NAME = "Prepare Base Model"
 

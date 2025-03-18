@@ -2,14 +2,12 @@ import os
 
 # os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices=0'
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-from pprint import pprint
 from tile_based_training import logger
 import warnings
 import click
 from pathlib import Path
 from tile_based_training.utils.common import (
     s3_bucket_config,
-    read_yaml,
     write_yaml,
     configure_gpu,
 )
@@ -23,7 +21,6 @@ from tile_based_training.pipeline.stage_03_model_training import ModelTRainingPi
 from tile_based_training.pipeline.stage_04_model_evaluation import (
     ModelEvaluationPipeline,
 )
-import tensorflow as tf
 
 warnings.filterwarnings("ignore")
 
@@ -66,9 +63,7 @@ warnings.filterwarnings("ignore")
     show_default=True,
     type=float,
 )
-@click.option(
-    "--EPOCHS", "EPOCHS", help="Number of epochs", required=False, default=5, type=int
-)
+@click.option("--EPOCHS", "EPOCHS", help="Number of epochs", required=False, default=5, type=int)
 @click.option(
     "--EPSILON",
     "EPSILON",
@@ -165,9 +160,7 @@ def run_tile_based_classification_training(ctx, **kwargs):
     STAGE_NAME = "Data Ingestion stage"
     if kwargs["enable_data_ingestion"] == True:
         try:
-            logger.info(
-                f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<"
-            )
+            logger.info(f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<")
             obj = DataIngestionTrainingPipeline()
             obj.main()
             logger.info(
@@ -182,9 +175,7 @@ def run_tile_based_classification_training(ctx, **kwargs):
         )
 
     STAGE_NAME = "Prepare Base Model"
-    logger.info(
-        f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<"
-    )
+    logger.info(f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<")
 
     try:
         obj = PrepareBaseModelTRainingPipeline()
@@ -198,9 +189,7 @@ def run_tile_based_classification_training(ctx, **kwargs):
     STAGE_NAME = "Training Model"
 
     try:
-        logger.info(
-            f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<"
-        )
+        logger.info(f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<")
         obj = ModelTRainingPipeline()
         obj.main(device_name)
         logger.info(
@@ -213,9 +202,7 @@ def run_tile_based_classification_training(ctx, **kwargs):
     STAGE_NAME = "Evaluating Model"
 
     try:
-        logger.info(
-            f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<"
-        )
+        logger.info(f"\n=================================================================\n>>>>>> stage {STAGE_NAME} started <<<<<<")
         obj = ModelEvaluationPipeline()
         obj.main()
         logger.info(

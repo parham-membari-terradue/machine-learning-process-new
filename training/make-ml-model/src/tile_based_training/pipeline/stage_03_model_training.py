@@ -1,8 +1,6 @@
 from tile_based_training.config.configuration import ConfigurationManager
 from tile_based_training.components.train_model import Training
 from tile_based_training import logger
-import tensorflow as tf
-import os
 
 
 STAGE_NAME = "Training Model"
@@ -18,7 +16,7 @@ class ModelTRainingPipeline:
         training_config = config.get_training_config()
         training = Training(config=training_config)
         training.get_base_model()
-        history = training.train_model(device_name)
+        training.train_model(device_name)
 
 
 if __name__ == "__main__":
