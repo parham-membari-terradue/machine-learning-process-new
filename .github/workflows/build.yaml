@@ -114,11 +114,29 @@ jobs:
           do
             tag="ghcr.io/parham-membari-terradue/machine-learning-process-new/${step}:${{ needs.version.outputs.app-version }}"
             docker pull ${tag}
+            
             shatag=$( docker inspect ${tag} | yq -r '.[0]["RepoDigests"][0]' )
-            echo 'shatag: ${shatag}'
-            cwl_path="${{ matrix.path }}"
+            echo "shatag: ${shatag}"
+
+            # Set correct CWL file path based on step
+            if [ "$step" == "training" ]; then
+                cwl_path="training/app-package/tile-sat-training.cwl"
+            elif [ "$step" == "inference" ]; then
+                cwl_path="inference/app-package/tile-sat-inference.cwl"
+            fi
+
+            # Ensure the CWL file exists before updating
+            if [ ! -f "$cwl_path" ]; then
+                echo "❌ ERROR: CWL file not found: $cwl_path"
+                exit 1
+            fi
+
+            # Update the CWL file with the correct Docker image tag
             s="${step}" t="${shatag}" yq -i eval '(.$graph[] | select (.id == env(s)) ).hints.DockerRequirement.dockerPull = env(t)' "$cwl_path"
+
+            echo "✅ Updated $cwl_path with Docker image tag: $shatag"
           done
+
 
       - name: Update Metadata in CWL files
         run: |
