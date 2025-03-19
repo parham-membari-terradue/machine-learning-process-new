@@ -29,8 +29,15 @@ jobs:
       app-version: ${{ steps.set-version.outputs.version }}
     steps:
       - uses: actions/checkout@v2
-      - run: echo "APP_VERSION=$(cat codemeta.json | jq -r .version )" >> $GITHUB_ENV
-      - run: echo "App version is $APP_VERSION"
+      - name: Extract Version
+        run: |
+          APP_VERSION=$(cat codemeta.json | jq -r .version)
+          if [ -z "$APP_VERSION" ]; then
+            echo "Error: Version is missing in codemeta.json"
+            exit 1
+          fi
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          echo "App version: $APP_VERSION"
       - id: set-version
         run: echo "version=${APP_VERSION}" >> $GITHUB_ENV
 
@@ -38,8 +45,8 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     permissions:
-        contents: read
-        packages: write
+      contents: read
+      packages: write
     strategy:
       matrix:
         include:
@@ -49,23 +56,34 @@ jobs:
             path: make-inference
 
     steps:
-        - name: Checkout repository
-          uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-        - name: Authenticate to GitHub Container Registry
-          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Authenticate to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-        - name: Build & Push Docker Image
-          run: |
-            IMAGE_ID=ghcr.io/parham-membari-terradue/machine-learning-process-new/${{ matrix.step }}
-            DOCKERFILE_PATH=${{ matrix.step }}/${{ matrix.path }}/Dockerfile
-            CONTEXT_PATH=${{ matrix.step }}/${{ matrix.path }}
+      - name: Ensure Version is Set
+        run: |
+          if [ -z "${{ needs.version.outputs.app-version }}" ]; then
+            echo "Error: App version is not set!"
+            exit 1
+          fi
+          echo "App version: ${{ needs.version.outputs.app-version }}"
 
-            echo "Building Docker image from: $DOCKERFILE_PATH"
+      - name: Build & Push Docker Image
+        run: |
+          IMAGE_ID="ghcr.io/parham-membari-terradue/machine-learning-process-new/${{ matrix.step }}:${{ needs.version.outputs.app-version }}"
+          DOCKERFILE_PATH="${{ matrix.step }}/${{ matrix.path }}/Dockerfile"
+          CONTEXT_PATH="${{ matrix.step }}/${{ matrix.path }}"
 
-            docker build "$CONTEXT_PATH" --file "$DOCKERFILE_PATH" --tag "${{ matrix.step }}"
-            docker tag "${{ matrix.step }}" "$IMAGE_ID:${{ needs.version.outputs.app-version }}"
-            docker push "$IMAGE_ID:${{ needs.version.outputs.app-version }}"
+          echo "Building Docker image from: $DOCKERFILE_PATH"
+          docker build "$CONTEXT_PATH" --file "$DOCKERFILE_PATH" --tag "${{ matrix.step }}"
+
+          echo "Tagging image as: $IMAGE_ID"
+          docker tag "${{ matrix.step }}" "$IMAGE_ID"
+
+          echo "Pushing image: $IMAGE_ID"
+          docker push "$IMAGE_ID"
 
   create-release:
     needs:
@@ -81,24 +99,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Check if Tag Already Exists
-        id: check_tag
+      - name: Check if Release Already Exists
+        id: check_release
         run: |
           git fetch --tags
           if git ls-remote --tags origin | grep -q "refs/tags/${{ needs.version.outputs.app-version }}"; then
             echo "Tag already exists. Creating a new release with a different version."
-            echo "tag_exists=true" >> $GITHUB_ENV
+            NEW_VERSION=$(echo "${{ needs.version.outputs.app-version }}" | awk -F. -v OFS=. '{$NF += 1 ; print}')
+            echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+            echo "Creating a new release: $NEW_VERSION"
           else
-            echo "Tag does not exist. Proceeding with release creation."
-            echo "tag_exists=false" >> $GITHUB_ENV
+            echo "Using existing version: ${{ needs.version.outputs.app-version }}"
+            echo "NEW_VERSION=${{ needs.version.outputs.app-version }}" >> $GITHUB_ENV
           fi
-
-      - name: Create New Version if Needed
-        if: env.tag_exists == 'true'
-        run: |
-          NEW_VERSION=$(echo "${{ needs.version.outputs.app-version }}" | awk -F. -v OFS=. '{$NF += 1 ; print}')
-          echo "New version: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -106,8 +119,8 @@ jobs:
         with:
           draft: false
           prerelease: false
-          release_name: ${{ env.version }}
-          tag_name: ${{ env.version }}
+          release_name: ${{ env.NEW_VERSION }}
+          tag_name: ${{ env.NEW_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -127,8 +140,8 @@ jobs:
           - name: tile-sat-inference
             path: inference/app-package/tile-sat-inference.cwl
     permissions:
-        contents: read
-        packages: write
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v2
 
@@ -152,29 +165,11 @@ jobs:
             s="${step}" t="${shatag}" yq -i eval '(.$graph[] | select (.id == env(s)) ).hints.DockerRequirement.dockerPull = env(t)' "$cwl_path"
           done
 
-      - name: Update Metadata in CWL files
-        run: |
-          cwl_path="${{ matrix.path }}"
-          r=$( cat codemeta.json | jq -r ".codeRepository" ) yq -i eval '."s:codeRepository" = {"URL" : env(r)}' "$cwl_path"
-          v="${{ needs.version.outputs.app-version }}" yq -i eval '."s:softwareVersion" = env(v)' "$cwl_path"
-          n=$(cat codemeta.json | jq -r '(.author[0].givenName + " " + .author[0].familyName)') \
-          e=$(cat codemeta.json | jq -r '.author[0].email') \
-          a=$(cat codemeta.json | jq -r '.author[0].affiliation["name"]') \
-          yq eval -i  '."s:author" += [{"class": "s:Person", "s.name": env(n), "s.email": env(e), "s.affiliation": env(a)}]' "$cwl_path"
-
-      - name: Cleanup downloads folder
-        run: rm -rf downloads/*
-
-      - name: Prepare Artifacts for Upload
-        run: |
-          mkdir -p downloads
-          cp "${{ matrix.path }}" "downloads/${{ matrix.name }}.${{ needs.version.outputs.app-version }}.cwl"
-
       - name: Upload CWL as Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: application-package-${{ matrix.name }}
-          path: downloads
+          path: ${{ matrix.path }}
           overwrite: true
 
       - name: Upload Release Assets
@@ -183,6 +178,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: downloads/${{ matrix.name }}.${{ needs.version.outputs.app-version }}.cwl
+          asset_path: ${{ matrix.path }}
           asset_name: ${{ matrix.name }}.${{ needs.version.outputs.app-version }}.cwl
           asset_content_type: text/yaml
