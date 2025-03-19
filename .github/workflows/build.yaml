@@ -12,8 +12,6 @@ on:
 
 env:
   GHCR_REPO: "ghcr.io/parham-membari-terradue/machine-learning-process-new"
-  CWL_TRAINING_PATH: "training/app-package/tile-sat-training.cwl"
-  CWL_INFERENCE_PATH: "inference/app-package/tile-sat-inference.cwl"
 
 jobs:
   validate:
@@ -24,8 +22,8 @@ jobs:
         with:
           python-version: 3.x
       - run: pip install cwltool
-      - run: cwltool --validate ${{ env.CWL_TRAINING_PATH }}
-      - run: cwltool --validate ${{ env.CWL_INFERENCE_PATH }}
+      - run: cwltool --validate training/app-package/tile-sat-training.cwl
+      - run: cwltool --validate inference/app-package/tile-sat-inference.cwl
 
   version:
     needs: validate
@@ -116,9 +114,9 @@ jobs:
       matrix:
         include:
           - name: tile-sat-training
-            path: ${{ env.CWL_TRAINING_PATH }}
+            cwl_path: "training/app-package/tile-sat-training.cwl"
           - name: tile-sat-inference
-            path: ${{ env.CWL_INFERENCE_PATH }}
+            cwl_path: "inference/app-package/tile-sat-inference.cwl"
     permissions:
         contents: read
         packages: write
@@ -137,9 +135,9 @@ jobs:
 
             # Select correct CWL file
             if [ "$step" == "training" ]; then
-                cwl_path="${{ env.CWL_TRAINING_PATH }}"
+                cwl_path="${{ matrix.cwl_path }}"
             else
-                cwl_path="${{ env.CWL_INFERENCE_PATH }}"
+                cwl_path="${{ matrix.cwl_path }}"
             fi
 
             # Ensure the CWL file exists before updating
@@ -156,7 +154,7 @@ jobs:
 
       - name: Update Metadata in CWL files
         run: |
-          cwl_path="${{ matrix.path }}"
+          cwl_path="${{ matrix.cwl_path }}"
 
           if [ ! -f "$cwl_path" ]; then
               echo "❌ ERROR: CWL file not found: $cwl_path"
@@ -178,7 +176,7 @@ jobs:
       - name: Prepare Artifacts for Upload
         run: |
           mkdir -p downloads
-          cp "${{ matrix.path }}" "downloads/${{ matrix.name }}.${{ needs.version.outputs.app-version }}.cwl"
+          cp "${{ matrix.cwl_path }}" "downloads/${{ matrix.name }}.${{ needs.version.outputs.app-version }}.cwl"
 
       - name: Upload CWL as Artifacts
         uses: actions/upload-artifact@v4
