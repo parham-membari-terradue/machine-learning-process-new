@@ -102,7 +102,9 @@ jobs:
         step: 
           - { name: "tile-sat-training", path: "training/app-package/tile-sat-training.cwl" }
           - { name: "tile-sat-inference", path: "inference/app-package/tile-sat-inference.cwl" }
-
+    permissions:
+        contents: read
+        packages: write
     steps:
       - uses: actions/checkout@v2
 
