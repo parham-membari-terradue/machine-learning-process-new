@@ -47,6 +47,7 @@ jobs:
     strategy:
       matrix:
         step: [training, inference]
+        path: [make-ml-model, make-inference]
 
     steps:
     - uses: actions/checkout@v2
@@ -55,7 +56,7 @@ jobs:
     - name: build & push image
       run: |
         IMAGE_ID=ghcr.io/eoap/mastering-app-package/${{ matrix.step }}
-        docker build ${{ matrix.step }}/make-ml-model --file ${{ matrix.step }}/make-ml-model/Dockerfile --tag ${{ matrix.step }}
+        docker build ${{ matrix.step }}/${{matrix.path}} --file ${{ matrix.step }}/${{matrix.path}}/Dockerfile --tag ${{ matrix.step }}
         docker tag ${{ matrix.step }} $IMAGE_ID:${{needs.version.outputs.app-version}}
         docker push $IMAGE_ID:${{needs.version.outputs.app-version}}
 
