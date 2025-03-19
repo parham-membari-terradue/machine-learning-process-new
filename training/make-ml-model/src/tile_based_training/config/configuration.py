@@ -6,14 +6,11 @@ from tile_based_training.entity.config_entity import (
     TrainingConfig,
     EvaluationConfig,
 )
-import os
 
 
 # CONFIGURATION MANAGER
 class ConfigurationManager:
-    def __init__(
-        self, config_filepath=CONFIG_FILE_PATH, params_filepath=PARAMS_FILE_PATH
-    ):
+    def __init__(self, config_filepath=CONFIG_FILE_PATH, params_filepath=PARAMS_FILE_PATH):
         self.config = read_yaml(config_filepath)
         self.params = read_yaml(params_filepath)
 
@@ -22,9 +19,7 @@ class ConfigurationManager:
     def get_data_ingestion_config(self) -> DataIngestionConfig:
         config = self.config.data_ingestion
         create_directories([config.root_dir])
-        collection_name = self.params.stac_endpoint_url.split("/collections/")[1].split(
-            "/items/"
-        )[0]
+        collection_name = self.params.stac_endpoint_url.split("/collections/")[1].split("/items/")[0]
         stac_endpoint_url = self.params.stac_endpoint_url.split("/collections/")[0]
         data_ingestion_config = DataIngestionConfig(
             root_dir=config.root_dir,
@@ -60,12 +55,8 @@ class ConfigurationManager:
     def get_training_config(self) -> TrainingConfig:
         training_config = self.config.training
         prepare_base_model = self.config.prepare_base_model
-        train_data = load_json(
-            Path(training_config.all_data_urls + "/splited_data.json")
-        )["train"]
-        val_data = load_json(
-            Path(training_config.all_data_urls + "/splited_data.json")
-        )["val"]
+        train_data = load_json(Path(training_config.all_data_urls + "/splited_data.json"))["train"]
+        val_data = load_json(Path(training_config.all_data_urls + "/splited_data.json"))["val"]
         # load params
         params = self.params
         create_directories([Path(training_config.trained_model_path)])
@@ -88,9 +79,7 @@ class ConfigurationManager:
         return training_config
 
     def get_evaluation_config(self) -> EvaluationConfig:
-        test_data = load_json(
-            Path(self.config.evaluation.all_data_urls + "/splited_data.json")
-        )["test"]
+        test_data = load_json(Path(self.config.evaluation.all_data_urls + "/splited_data.json"))["test"]
 
         eval_config = EvaluationConfig(
             path_of_model=self.config.evaluation.trained_model_path,

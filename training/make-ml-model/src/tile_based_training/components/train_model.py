@@ -1,12 +1,6 @@
-import os
 import sys
 import numpy as np
-from sklearn.model_selection import train_test_split
-from keras.utils import to_categorical
-from tile_based_training.entity.config_entity import TrainingConfig
 import tensorflow as tf
-from tensorflow.keras.callbacks import ModelCheckpoint
-import glob
 import random
 from tile_based_training.utils.common import rasterio_s3_read
 from tile_based_training import logger
@@ -32,15 +26,11 @@ class Training:
         """Reads images, preprocesses, and returns tensors."""
         try:
             file_path = file_path.numpy().decode("utf-8")
-            data = rasterio_s3_read(
-                file_path
-            )  # Assuming this is correctly defined elsewhere
+            data = rasterio_s3_read(file_path)  # Assuming this is correctly defined elsewhere
             data = data / np.amax(data)  # Normalize
             # data = data / 10000.0 # Normalize
             image_data = np.transpose(data, (1, 2, 0))  # Transpose for proper shape
-            return tf.convert_to_tensor(
-                image_data, dtype=tf.float32
-            ), tf.convert_to_tensor(label, dtype=tf.float32)
+            return tf.convert_to_tensor(image_data, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
 
         except Exception as e:
             print("Error:", e)
@@ -62,18 +52,13 @@ class Training:
             "SeaLake": 9,
         }
 
-        labels = [
-            tf.one_hot(classes[file_path.split("/")[-2].split("_")[0]], depth=10)
-            for file_path in file_paths
-        ]
+        labels = [tf.one_hot(classes[file_path.split("/")[-2].split("_")[0]], depth=10) for file_path in file_paths]
         dataset = tf.data.Dataset.from_tensor_slices((file_paths, labels))
         dataset = dataset.map(lambda x, y: (tf.strings.as_string(x), y))
 
         # Optimize dataset performance
         dataset = dataset.map(
-            lambda x, y: tf.py_function(
-                self.read_images, [x, y], (tf.float32, tf.float32)
-            ),
+            lambda x, y: tf.py_function(self.read_images, [x, y], (tf.float32, tf.float32)),
         )
         dataset = dataset.map(
             lambda x, y: (
@@ -81,11 +66,7 @@ class Training:
                 tf.ensure_shape(y, self.config.calsses_number),
             )
         )
-        dataset = (
-            dataset.batch(self.config.params_batch_size)
-            .cache()
-            .prefetch(tf.data.AUTOTUNE)
-        )
+        dataset = dataset.batch(self.config.params_batch_size).cache().prefetch(tf.data.AUTOTUNE)
 
         return dataset
 
@@ -125,9 +106,7 @@ class Training:
 
         # **Train on the correct device**
         # Use dynamically assigned device
-        logger.info(
-            f"Device is: {device_name} , Built with CUDA: {tf.test.is_built_with_cuda()}"
-        )
+        logger.info(f"Device is: {device_name} , Built with CUDA: {tf.test.is_built_with_cuda()}")
         try:
             with tf.device(device_name):
                 history = self.model.fit(

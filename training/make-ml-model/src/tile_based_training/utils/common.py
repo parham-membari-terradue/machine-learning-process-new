@@ -12,20 +12,12 @@ from typing import Any
 import base64
 import requests
 import random
-from collections import namedtuple
 import duckdb
 import boto3  # noqa: F401
-import botocore
-from urllib.parse import urljoin, urlparse
-from pystac import Collection, read_file, Asset
+from urllib.parse import urlparse
 from loguru import logger
 import requests
-from pystac.stac_io import DefaultStacIO, StacIO
-import subprocess
-from botocore.exceptions import ClientError
-import numpy as np
-from pystac.extensions.eo import EOExtension
-import pandas as pd
+from pystac.stac_io import DefaultStacIO
 import json
 import os
 import re
@@ -36,6 +28,7 @@ import logging
 from pygeofilter.parsers.cql2_json import parse as json_parse
 from pygeofilter_duckdb import to_sql_where
 from pygeofilter.util import IdempotentDict
+
 logging.getLogger("httpchecksum").setLevel(logging.INFO)
 
 
@@ -239,7 +232,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 import os
-import time
 import logging
 import requests
 
@@ -258,9 +250,7 @@ def get_token(url, **kwargs):
         access_token = json_data.get("access_token")
         return access_token
     else:
-        logger.error(
-            f"Request for a token failed with status code {response.status_code}"
-        )
+        logger.error(f"Request for a token failed with status code {response.status_code}")
 
 
 def get_headers():
@@ -273,7 +263,6 @@ def get_headers():
     token = get_token(url=os.environ.get("IAM_URL"), **payload)
     headers = {"Authorization": f"Bearer {token}"}
     return headers
-
 
 
 class UserSettings:
@@ -342,10 +331,10 @@ class CustomStacIO(DefaultStacIO):
 
         self.s3 = session.client(
             service_name="s3",
-            region_name=settings.region_name, # type: ignore
+            region_name=settings.region_name,  # type: ignore
             use_ssl=True,
             endpoint_url=f"https://{settings.endpoint_url}",
-            aws_access_key_id=settings.aws_access_key_id, # type: ignore
+            aws_access_key_id=settings.aws_access_key_id,  # type: ignore
             aws_secret_access_key=settings.aws_secret_access_key,
         )
 
@@ -355,11 +344,7 @@ class CustomStacIO(DefaultStacIO):
             bucket = parsed.netloc
             key = parsed.path[1:]
 
-            return (
-                self.s3.get_object(Bucket=bucket, Key=key)["Body"]
-                .read()
-                .decode("utf-8")
-            )
+            return self.s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode("utf-8")
         else:
             return super().read_text(source, *args, **kwargs)
 
@@ -419,9 +404,7 @@ def rasterio_s3_read(s3_path: str):
     os.environ["CPL_DEBUG"] = "OFF"
     os.environ["GDAL_DISABLE_READDIR_ON_OPEN"] = "EMPTY_DIR"
     os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
-    os.environ[
-        "GTIFF_SRS_SOURCE"
-    ] = "EPSG"  # Use official EPSG registry for CRS definitions
+    os.environ["GTIFF_SRS_SOURCE"] = "EPSG"  # Use official EPSG registry for CRS definitions
     os.environ["PROJ_DEBUG"] = "0"
     os.environ["CPL_LOG"] = "DISABLE"
     os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"
@@ -458,9 +441,7 @@ def rasterio_s3_read(s3_path: str):
     if fs_opener.region:
         pass
     else:
-        logger.error(
-            "File system opener is not configurated properly to open file from s3 bucket"
-        )
+        logger.error("File system opener is not configurated properly to open file from s3 bucket")
 
     with rasterio.open(image_name, opener=fs_opener.open) as src:
         data = src.read()
@@ -484,7 +465,6 @@ def rasterio_s3_read(s3_path: str):
     # gdal.SetConfigOption("AWS_VIRTUAL_HOSTING", "FALSE")
 
 
-
 def duckdb_s3_config():
     s3_aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
     s3_aws_access_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
@@ -504,9 +484,7 @@ def duckdb_s3_config():
     connection.execute(f"SET s3_region = '{s3_aws_region}';")
     connection.execute(f"SET s3_access_key_id = '{s3_aws_access_key_id}';")
     connection.execute(f"SET s3_secret_access_key = '{s3_aws_access_secret_key}';")
-    connection.execute(
-        f"SET s3_endpoint = '{duckdb_s3_endpoint_url}';"
-    )  # No extra "https://"
+    connection.execute(f"SET s3_endpoint = '{duckdb_s3_endpoint_url}';")  # No extra "https://"
     connection.execute("SET s3_use_ssl = true;")
     connection.execute("SET enable_progress_bar = false;")
 
@@ -541,9 +519,7 @@ def duckdb_s3_config():
 #     return sql_query
 
 
-
-
-def sql_generator(class_name, geoparquet_asset_path, samples_per_class= 100):
+def sql_generator(class_name, geoparquet_asset_path, samples_per_class=100):
     # Use the geometry variable inside the CQL2 filter
     geometry = {
         "type": "Polygon",

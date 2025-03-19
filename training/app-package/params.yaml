@@ -22,12 +22,13 @@ enable_data_ingestion: True
 ##############################################################
 ##############################################################
 # AWS
-ADES_AWS_S3_ENDPOINT:  #ADES_AWS_S3_ENDPOINT 
-ADES_AWS_REGION:  # ADES_AWS_REGION 
-ADES_AWS_DEFAULT_REGION:  #ADES_AWS_DEFAULT_REGION 
+# AWS
+ADES_AWS_S3_ENDPOINT: https://s3.fr-par.scw.cloud #ADES_AWS_S3_ENDPOINT 
+ADES_AWS_REGION: fr-par # ADES_AWS_REGION 
+ADES_AWS_DEFAULT_REGION: fr-par #ADES_AWS_DEFAULT_REGION 
 ADES_AWS_ACCESS_KEY_ID:  #ADES_AWS_ACCESS_KEY_ID 
 ADES_AWS_SECRET_ACCESS_KEY:  # ADES_AWS_SECRET_ACCESS_KEY 
-ADES_BUCKET_NAME:  # ADES_BUCKET_NAME ai-ext-bucket-dev
+ADES_BUCKET_NAME: ai-ext-bucket-dev # ADES_BUCKET_NAME ai-ext-bucket-dev
 ##############################################################
 ##############################################################
 # STAC

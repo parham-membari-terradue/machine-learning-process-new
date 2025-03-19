@@ -16,7 +16,7 @@ class DataIngestionTrainingPipeline:
             print(data_ingestion_config)
             data_ingestion = DataIngestion(config=data_ingestion_config)
             all_urls = data_ingestion.stac_loader()
-            dataset = data_ingestion.data_spliting(all_urls)
+            data_ingestion.data_spliting(all_urls)
 
             ### Uncomment this only if you want to download the data locally
             # data_ingestion.data_downloader(dataset["train"],split_name="train")

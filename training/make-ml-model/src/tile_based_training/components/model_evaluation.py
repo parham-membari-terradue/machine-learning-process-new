@@ -1,14 +1,10 @@
 from sklearn import metrics
 import mlflow
-from tqdm import tqdm
 import os
-import rasterio
 import numpy as np
-from keras.utils import to_categorical
 import tensorflow as tf
 from pathlib import Path
 from mlflow.keras import log_model
-import glob
 from matplotlib import pyplot as plt
 from tile_based_training.config.configuration import EvaluationConfig
 from tile_based_training.utils.common import *
@@ -16,7 +12,6 @@ import seaborn as sns
 
 # from src.pipeline.stage_03_model_training import history
 from keras.models import load_model
-from sklearn.metrics import roc_curve, auc
 from mlflow.models import infer_signature
 
 
@@ -36,9 +31,7 @@ class Evaluation:
             ## uncomment this when you download the data
             # image_data = np.transpose(gdal_array.LoadFile(file_path.numpy().decode("utf-8"))/10000.0,(1,2,0))
 
-            return tf.convert_to_tensor(
-                image_data, dtype=tf.float32
-            ), tf.convert_to_tensor(label, dtype=tf.float32)
+            return tf.convert_to_tensor(image_data, dtype=tf.float32), tf.convert_to_tensor(label, dtype=tf.float32)
         except Exception as e:
             print("Error:", e)
             return (None, label)
@@ -56,32 +49,17 @@ class Evaluation:
             "River": 8,
             "SeaLake": 9,
         }
-        labels = [
-            tf.one_hot(classes[file_path.split("/")[-2].split("_")[0]], depth=10)
-            for file_path in file_paths
-        ]
+        labels = [tf.one_hot(classes[file_path.split("/")[-2].split("_")[0]], depth=10) for file_path in file_paths]
 
         dataset = tf.data.Dataset.from_tensor_slices((file_paths, labels))
 
-        dataset = dataset.map(
-            lambda x, y: tf.py_function(
-                self.read_images, [x, y], (tf.float32, tf.float32)
-            )
-        )
+        dataset = dataset.map(lambda x, y: tf.py_function(self.read_images, [x, y], (tf.float32, tf.float32)))
         dataset.map(
-            lambda x, y: tf.py_function(
-                self.read_images, [x, y], (tf.float32, tf.float32)
-            ),
+            lambda x, y: tf.py_function(self.read_images, [x, y], (tf.float32, tf.float32)),
             num_parallel_calls=tf.data.AUTOTUNE,
         )
-        dataset = dataset.map(
-            lambda x, y: (tf.ensure_shape(x, [64, 64, 13]), tf.ensure_shape(y, [10]))
-        )
-        dataset = (
-            dataset.batch(self.config.params_batch_size)
-            .cache()
-            .prefetch(tf.data.AUTOTUNE)
-        )
+        dataset = dataset.map(lambda x, y: (tf.ensure_shape(x, [64, 64, 13]), tf.ensure_shape(y, [10])))
+        dataset = dataset.batch(self.config.params_batch_size).cache().prefetch(tf.data.AUTOTUNE)
 
         return dataset
 
@@ -94,19 +72,13 @@ class Evaluation:
         self.model = self.load_model(self.config.path_of_model)
         test_paths = self.config.test_data_paths["url"]
         random.shuffle(test_paths)
-        test_dataset = (
-            self.test_dataloader(test_paths)
-            .shuffle(buffer_size=2 * self.config.params_batch_size)
-            .cache()
-        )
+        test_dataset = self.test_dataloader(test_paths).shuffle(buffer_size=2 * self.config.params_batch_size).cache()
 
         self.score = self.model.evaluate(test_dataset)
         y_pred = self.model.predict(test_dataset.map(lambda x, y: x))
 
         # Extract true labels directly from the test_dataset
-        self.y_true = np.array(
-            [np.argmax(y.numpy()) for _, y in test_dataset.unbatch()]
-        )
+        self.y_true = np.array([np.argmax(y.numpy()) for _, y in test_dataset.unbatch()])
         # Extract predicted labels
         self.y_pred_amax = np.argmax(y_pred, axis=1)
 
@@ -176,12 +148,10 @@ class Evaluation:
         confusion_matrix_figure = self.plot_confusion_matrix()
         mlflow.set_experiment("EuroSAT_classification")
         with mlflow.start_run():
-            
+
             mlflow.tensorflow.autolog()
             mlflow.log_params(self.config.all_params)
-            mlflow.log_figure(
-                confusion_matrix_figure, artifact_file="Confusion_Matrix.png"
-            )
+            mlflow.log_figure(confusion_matrix_figure, artifact_file="Confusion_Matrix.png")
             mlflow.log_metrics(
                 {
                     "loss": self.score[0],

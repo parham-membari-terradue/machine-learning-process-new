@@ -1,7 +1,6 @@
 from tile_based_training.config.configuration import ConfigurationManager
 from tile_based_training.components.model_evaluation import Evaluation
 from tile_based_training import logger
-import tensorflow as tf
 
 
 STAGE_NAME = "Evaluating Model"

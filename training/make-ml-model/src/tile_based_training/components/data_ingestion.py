@@ -1,17 +1,13 @@
 # from . import logger
 from tile_based_training.utils.common import *
 from tile_based_training.entity.config_entity import DataIngestionConfig
-from pathlib import Path
 import os
-from tqdm import tqdm, tqdm_gui, tqdm_pandas
+from tqdm import tqdm
 from pystac_client import Client
 from pystac.stac_io import DefaultStacIO, StacIO
-import pystac
 from stac_geoparquet.arrow._api import stac_table_to_items
-import boto3
 import botocore
 import io
-from sklearn.model_selection import train_test_split
 from tile_based_training.utils.common import duckdb_s3_config, sql_generator
 
 # UPDATING src's component
@@ -27,26 +23,27 @@ class DataIngestion:
             StacIO.set_default(CustomStacIO)
             StacIO.read_text_method = CustomStacIO.read_text
             stac_endpoint = self.config.stac_endpoint
-            download_dir = self.config.local_data_file
+            self.config.local_data_file
             collection_name = self.config.collection_name
             samples_per_class = self.config.samples_per_class
             logger.info(f"Accessing STAC endpoint")
             image_urls = []
             catalog = Client.open(
-                    stac_endpoint,
-                    
-                    ignore_conformance=True,
-                )
+                stac_endpoint,
+                ignore_conformance=True,
+            )
             collection = catalog.get_child(collection_name)
             for key, asset in collection.get_assets().items():
-                if asset.media_type=="application/vnd.apache.parquet":
+                if asset.media_type == "application/vnd.apache.parquet":
                     geoparquet_asset_path = asset.href
             logger.info(f"geoparquet url: {geoparquet_asset_path}")
             connection = duckdb_s3_config()
             for class_name in tqdm(self.config.data_classes):
-                sql_query = sql_generator(class_name=class_name, geoparquet_asset_path=geoparquet_asset_path, samples_per_class= samples_per_class)
+                sql_query = sql_generator(
+                    class_name=class_name, geoparquet_asset_path=geoparquet_asset_path, samples_per_class=samples_per_class
+                )
                 table = connection.execute(sql_query).fetch_arrow_table()
-                
+
                 params = {
                     "collections": collection_name,
                     "max_items": samples_per_class,
@@ -57,10 +54,8 @@ class DataIngestion:
                     "limit": int(samples_per_class * 0.9),
                 }
                 try:
-                    for item in tqdm(
-                            stac_table_to_items(table), desc=f"Fetching data from class {class_name}"
-                        ):
-                        #print(item)
+                    for item in tqdm(stac_table_to_items(table), desc=f"Fetching data from class {class_name}"):
+                        # print(item)
                         image_urls.append(
                             {
                                 "url": item["assets"]["image"]["href"],
@@ -81,15 +76,9 @@ class DataIngestion:
         X = [x["url"] for x in full_dataset]
         y = [x["label"] for x in full_dataset]
         random_state = 42
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=random_state
-        )
-        X_train, X_val, y_train, y_val = train_test_split(
-            X_train, y_train, test_size=0.25, random_state=random_state
-        )
-        logger.info(
-            f"Train size: {len(X_train)} , Valid size: {len(X_val)}, Test size: {len(X_test)}"
-        )
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
+        X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+        logger.info(f"Train size: {len(X_train)} , Valid size: {len(X_val)}, Test size: {len(X_test)}")
         dataset = {
             "train": {"url": X_train, "label": y_train},
             "val": {"url": X_val, "label": y_val},
@@ -133,9 +122,7 @@ class DataIngestion:
                 os.makedirs(output_dir, exist_ok=True)
 
                 # Save the tif content to a local file
-                with open(
-                    f'{output_dir}/{url.split("/")[-1].replace(".tif","")}.tif', "wb"
-                ) as file:
+                with open(f'{output_dir}/{url.split("/")[-1].replace(".tif","")}.tif', "wb") as file:
                     file.write(content.getvalue())
 
         except Exception as e:

@@ -1,14 +1,9 @@
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.models import load_model
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten
 from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from pathlib import Path
-from sklearn import metrics
 from tile_based_training.entity.config_entity import PrepareBaseModelConfig
 
 
@@ -39,9 +34,7 @@ class PrepareBaseModel:
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
-        model.add(
-            Conv2D(64, (3, 3), padding="same", kernel_regularizer=kernel_regularizer)
-        )
+        model.add(Conv2D(64, (3, 3), padding="same", kernel_regularizer=kernel_regularizer))
         model.add(Activation("relu"))
         model.add(Conv2D(64, (3, 3)))
         model.add(Activation("relu"))
@@ -58,9 +51,7 @@ class PrepareBaseModel:
 
         optimizers = {
             "Adam": tf.keras.optimizers.Adam(learning_rate=lr, epsilon=epsilon),
-            "SGD": tf.keras.optimizers.SGD(
-                learning_rate=lr, momentum=momentum, weight_decay=decay
-            ),
+            "SGD": tf.keras.optimizers.SGD(learning_rate=lr, momentum=momentum, weight_decay=decay),
             "RMSprop": tf.keras.optimizers.RMSprop(
                 learning_rate=lr,
                 epsilon=epsilon,
