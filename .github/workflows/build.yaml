@@ -37,6 +37,9 @@ jobs:
   container-build:
     needs: version
     runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
     strategy:
       matrix:
         include:
@@ -46,23 +49,23 @@ jobs:
             path: make-inference
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+        - name: Checkout repository
+          uses: actions/checkout@v2
+  
+        - name: Authenticate to GitHub Container Registry
+          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    
+        - name: Build & Push Docker Image
+          run: |
+            IMAGE_ID=ghcr.io/parham-membari-terradue/machine-learning-process-new/${{ matrix.step }}
+            DOCKERFILE_PATH=${{ matrix.step }}/${{ matrix.path }}/Dockerfile
+            CONTEXT_PATH=${{ matrix.step }}/${{ matrix.path }}
 
-      - name: Authenticate to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "Building Docker image from: $DOCKERFILE_PATH"
 
-      - name: Build & Push Docker Image
-        run: |
-          IMAGE_ID=ghcr.io/parham-membari-terradue/machine-learning-process-new/${{ matrix.step }}
-          DOCKERFILE_PATH=${{ matrix.step }}/${{ matrix.path }}/Dockerfile
-          CONTEXT_PATH=${{ matrix.step }}/${{ matrix.path }}
-
-          echo "Building Docker image from: $DOCKERFILE_PATH"
-
-          docker build "$CONTEXT_PATH" --file "$DOCKERFILE_PATH" --tag "${{ matrix.step }}"
-          docker tag "${{ matrix.step }}" "$IMAGE_ID:${{ needs.version.outputs.app-version }}"
-          docker push "$IMAGE_ID:${{ needs.version.outputs.app-version }}"
+            docker build "$CONTEXT_PATH" --file "$DOCKERFILE_PATH" --tag "${{ matrix.step }}"
+            docker tag "${{ matrix.step }}" "$IMAGE_ID:${{ needs.version.outputs.app-version }}"
+            docker push "$IMAGE_ID:${{ needs.version.outputs.app-version }}"
 
   create-release:
     needs:
