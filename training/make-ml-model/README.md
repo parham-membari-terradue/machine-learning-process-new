@@ -34,11 +34,11 @@ hatch run prod:tile-based-training --stac_endpoint_url https://ai-extensions-sta
 
 
 
-## Docker
+## Build local docker image
 
 The user can build the docker image using the command below:
 ```
-docker build -t tile_sat_training:latest -f Dockerfile .
+docker build -t <image_tag> -f Dockerfile .
 ```
 
 
