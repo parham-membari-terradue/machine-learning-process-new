@@ -1,5 +1,5 @@
 # `make-inference` Module:
-This directory helps the user create the `make-inference` module, which is responsible for reading assets from a Sentinel-2 L1C STAC item, loading 13 common bands, and providing a binary TIFF image (water, non-water) using a CNN model that has already been trained in the [s5-newMLModel.ipynb](../../training/trials/s5-newMLModel.ipynb) Notebook. The module is already containerized in a dedicated [gcr.io](https://github.com/orgs/ai-extensions/packages/container/package/tile-sat-inference) container registry (please check the [README](../app-package/README.md#1-run-the-application-package) for information on how the image can be automatically pulled using cwltool/Calrissian). However, there is an [option](#containerize-make-inference-module-on-users-local-environment) for the user to build a Podman image on their local ml-lab environment using the `Dockerfile`.
+This directory helps the user create the `make-inference` module, which is responsible for reading assets from a Sentinel-2 L1C STAC item, loading 13 common bands, and providing a binary TIFF image (water, non-water) using a CNN model that has already been trained in the [training](../../training/) module. The module is already containerized in a dedicated [gcr.io](https://github.com/orgs/ai-extensions/packages/container/package/tile-sat-inference) container registry (please check the [README](../app-package/README.md#1-run-the-application-package) for information on how the image can be automatically pulled using cwltool/Calrissian). However, there is an [option](#containerize-make-inference-module-on-users-local-environment) for the user to build a Podman image on their local ml-lab environment using the `Dockerfile`.
 
 ## **Make Inference Module:**
 
@@ -42,7 +42,7 @@ This directory helps the user create the `make-inference` module, which is respo
 
 - `STAC objects`: STAC objects related to the provided masks, including STAC catalog and STAC Item.
 
-## How Will the Module Be Executed?
+## How to Execute
 The module will be triggered using the [tile-sat-inference.cwl](../app-package/tile-sat-inference.cwl). For more information about how to trigger the module, please check the related [README](../app-package/README.md) file.
 
 ## Containerize the `make-inference` Module on the User's Local Environment:
@@ -50,18 +50,5 @@ The user can build a `Podman` image to containerize the module using the command
 
 ```bash
 cd inference/make-inference
-podman image build -t ghcr.io/ai-extensions/tile-sat-inference:latest --no-cache .
-```
-
-The user can check the Podman images using:
-
-```bash
-podman images
-```
-
-Results:
-
-```bash
-REPOSITORY                            TAG         IMAGE ID      CREATED      SIZE
-ghcr.io/ai-extensions/tile-sat-inference  latest      8193ea11bf0d  4 weeks ago  4.25 GB
+docker build -t <image_tag> .
 ```

@@ -1,14 +1,10 @@
-# Provide an Inference Using Trained Model
+# Run Inference Module using CWL Runner
 
-In the [s5-newMLModel.ipynb](../../training/trials/s5-newMLModel.ipynb) notebook, the user trained a CNN model on EuroSAT to classify image chips into 10 different classes and tracked the workflow with MLFlow.
+In the [training](../../training/) mdule, the user trained a CNN model on EuroSAT dataset to classify image chips into 10 different classes and tracked the workflow with MLFlow.
 
-With this Application Package, the user performs inference by applying the trained model to unseen data to generate a classified image. This Application Package consists of one main module:
+In this Application Package, the user performs inference by applying the trained model to unseen data to generate a classified image. This Application Package consists of [make-inference](../make-inference/) module:
 
-- `make-inference`
-
-> **Note**: Please check the `make-inference` [documentation](../make-inference/README.md) regarding its usage before proceeding.
-
-The Application Package takes as input a (list of) Sentinel-2 L1C data and classifies it into 11 land cover classes:
+The Application Package takes as input a Sentinel-2 L1C data and classifies it into 11 land cover classes:
 
 | Class ID | Class Name            |
 |----------|-----------------------|
@@ -24,30 +20,32 @@ The Application Package takes as input a (list of) Sentinel-2 L1C data and class
 | 9        | SeaLake               |
 | 10       | No Data               |
 
-The CWL runners used to invoke the Application Package are [cwltool](https://github.com/common-workflow-language/cwltool) and [calrissian](https://github.com/Duke-GCB/calrissian).
+A CWL runner is used to invoke the Application Package is [cwltool](https://github.com/common-workflow-language/cwltool) or [calrissian](https://github.com/Duke-GCB/calrissian).
 
-STAC objects are provided for each input data, containing the input image, the classified mask, and its overview as separate assets.
 
 ## **How to Execute the Application Package?**
 
-> **Note**: Before proceeding, ensure access is configured to pull the image from a Private Registry. For more information, please check the [documentation](../../copy-secrets.md) provided.
+Before executing the application package with a CWL runner, the user must first stage in the Sentinel-2 L1C data. Instructions for doing this can be found in the [stage-in guide](./stage-in/README.md). Then update the latest docker image reference in the cwl file as below:
+```
+cd inference/app-package
+VERSION="0.0.2"
+curl -L -o "tile-sat-inference.${VERSION}.cwl" \
+  "https://github.com/parham-membari-terradue/machine-learning-process-new/releases/download/${VERSION}/tile-sat-inference.${VERSION}.cwl"
+
+```
 
 ### **Run the Application Package**:
-To test the application package, the user must stage-in a sentinel-2 L1C data. The instruction for data stage in is explain in [README.md](./stage-in/README.md).
-
 There are two methods to execute the application:
 
 - Executing the `tile-sat-inference` app using `cwltool` in a terminal:
 
     ```bash
-    cd inference/app-package
     cwltool --podman --debug tile-sat-inference.cwl#tile-sat-inference params.yml
     ```
 
 - Executing the water-bodies-app using `calrissian` in a terminal:
 
     ```bash
-    cd inference/app-package
     
     calrissian --debug --stdout /calrissian/out.json --stderr /calrissian/stderr.log --usage-report /calrissian/report.json --max-ram 10G --max-cores 2 --tmp-outdir-prefix /calrissian/tmp/ --outdir /calrissian/results/ --tool-logs-basepath /calrissian/logs tile-sat-inference.cwl#tile-sat-inference params.yml
     ```

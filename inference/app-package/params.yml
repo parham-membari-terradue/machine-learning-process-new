@@ -2,4 +2,4 @@ input_reference:
   # - class: Directory
   #   path: ./data/s2-no-cal
   class: Directory
-  path: /home/t2/Desktop/p/argo/machine-learning-process-new/inference/app-package/stage-in/stars_out
+  path: stage-in/stars_out

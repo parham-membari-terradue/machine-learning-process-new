@@ -1,5 +1,7 @@
-To stage-in the data please follow the instructions below:
-- Create an account in https://dataspace.copernicus.eu
+# Stage-in
+To test the inference module, the user must stage-in a sentinel-2 L1C data from the [https://dataspace.copernicus.eu](https://dataspace.copernicus.eu). The instruction for stage-in process is discussed below:
+
+- Create an account on https://dataspace.copernicus.eu
 - Edit the [usersetting.json](./usersettings.json) with your credentials:
 ```
 {
