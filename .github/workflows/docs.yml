@@ -7,9 +7,7 @@ on:
       - master
     paths:
       # Only rebuild website when docs have changed
-      - 'README.md'
-      - 'inference/app-package/README.md'
-      - 'inference/app-package/stage-in/README.md'
+      - 'docs'
       - 'mkdocs.yml'
       - .github/**
 
