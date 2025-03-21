@@ -137,15 +137,15 @@ jobs:
 
       - name: Update Metadata in CWL
         run: |
-          VERSION="${{ needs.version.outputs.app-version }}"
+          VERSION="${{ needs.version.outputs.app-version }}"          
           AUTHOR_NAME=$(jq -r '.author[0].givenName + " " + .author[0].familyName' codemeta.json)
           AUTHOR_EMAIL=$(jq -r '.author[0].email' codemeta.json)
           AUTHOR_AFFIL=$(jq -r '.author[0].affiliation.name' codemeta.json)
           REPO_URL=$(jq -r '.codeRepository' codemeta.json)
-
-          yq -i '.["s:codeRepository"] = {"URL": env(REPO_URL)}' "${{ matrix.cwl_path }}"
-          yq -i '.["s:softwareVersion"] = env(VERSION)' "${{ matrix.cwl_path }}"
-          yq -i '.["s:author"] = [{"class": "s:Person", "s.name": env(AUTHOR_NAME), "s.email": env(AUTHOR_EMAIL), "s.affiliation": env(AUTHOR_AFFIL)}]' "${{ matrix.cwl_path }}"
+          echo ' REPO_URL: $REPO_URL'
+          yq -i '.["s:codeRepository"] = {"URL": $REPO_URL}' "${{ matrix.cwl_path }}"
+          yq -i '.["s:softwareVersion"] = $VERSION' "${{ matrix.cwl_path }}"
+          yq -i '.["s:author"] = [{"class": "s:Person", "s.name": $AUTHOR_NAME, "s.email": $AUTHOR_EMAIL, "s.affiliation": $AUTHOR_AFFIL}]' "${{ matrix.cwl_path }}"
 
           echo "✅ Updated metadata in ${matrix.cwl_path}"
 
