@@ -33,6 +33,8 @@ STAC objects are provided for each input data, containing the input image, the c
 > **Note**: Before proceeding, ensure access is configured to pull the image from a Private Registry. For more information, please check the [documentation](../../copy-secrets.md) provided.
 
 ### **Run the Application Package**:
+To test the application package, the user must stage-in a sentinel-2 L1C data. The instruction for data stage in is explain in [README.md](./stage-in/README.md).
+
 There are two methods to execute the application:
 
 - Executing the `tile-sat-inference` app using `cwltool` in a terminal:

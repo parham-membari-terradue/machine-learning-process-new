@@ -127,7 +127,7 @@ jobs:
         run: |
           for step in training inference
           do
-            tag="${{ env.GHCR_REPO }}/${step}:${{ needs.version.outputs.app-version }}"
+            tag="ghcr.io/parham-membari-terradue/machine-learning-process-new/${step}:${{ needs.version.outputs.app-version }}"
             docker pull ${tag}
             
             shatag=$( docker inspect ${tag} | yq -r '.[0]["RepoDigests"][0]' )
@@ -153,14 +153,17 @@ jobs:
           done
 
       - name: Update Metadata in CWL files
-        run: |
-          cwl_path="${{ matrix.cwl_path }}"
+        run: |        
+          if [ "$step" == "training" ]; then
+                cwl_path="${{ matrix.cwl_path }}"
+            else
+                cwl_path="${{ matrix.cwl_path }}"
+            fi
 
           if [ ! -f "$cwl_path" ]; then
               echo "❌ ERROR: CWL file not found: $cwl_path"
               exit 1
           fi
-
           r=$(cat codemeta.json | jq -r ".codeRepository")
           v="${{ needs.version.outputs.app-version }}"
           n=$(cat codemeta.json | jq -r '(.author[0].givenName + " " + .author[0].familyName)')

@@ -255,7 +255,7 @@ def get_asset(item, common_name):
 
             if "common_name" in b.properties.keys() and common_name in b.properties["common_name"]:
 
-                return common_name
+                return asset.get_absolute_href()
 
 
 def item_filter_assets(item):
@@ -274,13 +274,10 @@ def item_filter_assets(item):
         "swir22",
     ]
     desirable_assets = {}
+    for common_name in common_names:
 
-    # Iterate over the assets in the item
-    desirable_assets = {
-        key: asset.get_absolute_href()
-        for key, asset in item.get_assets().items()
-        if "data" in asset.roles and any(common_name in key for common_name in common_names)
-    }
+        desirable_assets[common_name] = get_asset(item, common_name)
+
     assert len(desirable_assets) > 0, "Item has no desirable asset"
     return desirable_assets
 
@@ -327,6 +324,7 @@ def resize_and_convert_to_cog(asset_path, target_resolution=10):
 
 def asset_reader(assets):
     srcs = {asset_key: rasterio.open(asset_href) for asset_key, asset_href in assets.items()}
+    print(srcs)
     # common bands order:
     # ['coastal', 'blue', 'green', 'red', 'rededge70', 'rededge74', 'rededge78', 'nir', 'nir08', 'nir09', 'cirrus', 'swir16', 'swir22']
     referenced_src = next(iter(srcs.items()))[1]

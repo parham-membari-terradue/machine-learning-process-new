@@ -26,17 +26,22 @@ warnings.filterwarnings("ignore")
 @click.pass_context
 def run_inference(ctx, **params):
     # logger.info(os.path.dirname(os.path.abspath(".")))
+
     if os.path.isdir(params["input_reference"]):
         catalog = pystac.read_file(os.path.join(params["input_reference"], "catalog.json"))
         item = next(catalog.get_items())
+
         filtered_assets = item_filter_assets(item)
 
     else:
         item = pystac.read_file(params["input_reference"])
         filtered_assets = item_filter_assets(item)
+    for key, asset in item.get_assets().items():
+        print(key)
     logger.info(f"Read {item.get_self_href()}")
     window_size = 64
     for key, asset_href in filtered_assets.items():
+        print(asset_href)
         updated_asset_href = resize_and_convert_to_cog(asset_href)
         filtered_assets[key] = updated_asset_href
     ### Open the tif file

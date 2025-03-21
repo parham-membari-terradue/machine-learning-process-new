@@ -17,7 +17,7 @@ $graph:
       input_reference:
         doc: S2 product
         label: S2 product
-        type: string
+        type: Directory
     outputs:
       results:
         outputSource:
@@ -39,7 +39,7 @@ $graph:
     baseCommand: ["make-inference"]
     inputs:
       input_reference:
-        type: string
+        type: Directory
         inputBinding:
           position: 1
           prefix: --input_reference
