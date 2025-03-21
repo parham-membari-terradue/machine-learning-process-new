@@ -106,8 +106,9 @@ jobs:
     needs: [create-release, version]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  
       packages: write
+      
     strategy:
       matrix:
         include:
