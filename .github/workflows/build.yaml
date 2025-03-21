@@ -133,7 +133,8 @@ jobs:
 
       - name: Update Docker Image in CWL
         run: |
-          yq -i '.hints.DockerRequirement.dockerPull = "${{ steps.digest.outputs.digest }}"' "${{ matrix.cwl_path }}"
+          yq -i '(.["$graph"][] | select(.class == "CommandLineTool")).hints.DockerRequirement.dockerPull = "${{ steps.digest.outputs.digest }}"' "${{ matrix.cwl_path }}"
+
           echo "✅ Updated Docker image in CWL"
 
       - name: Update Metadata in CWL
