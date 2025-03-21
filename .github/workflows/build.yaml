@@ -163,7 +163,7 @@ jobs:
           if [ ! -f "$cwl_path" ]; then
               echo "❌ ERROR: CWL file not found: $cwl_path"
               exit 1
-          fi
+          fi 
           r=$(cat codemeta.json | jq -r ".codeRepository")
           v="${{ needs.version.outputs.app-version }}"
           n=$(cat codemeta.json | jq -r '(.author[0].givenName + " " + .author[0].familyName)')
