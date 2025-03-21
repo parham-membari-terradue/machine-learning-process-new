@@ -142,12 +142,15 @@ jobs:
           AUTHOR_EMAIL=$(jq -r '.author[0].email' codemeta.json)
           AUTHOR_AFFIL=$(jq -r '.author[0].affiliation.name' codemeta.json)
           REPO_URL=$(jq -r '.codeRepository' codemeta.json)
-          echo ' REPO_URL: $REPO_URL'
-          yq -i '.["s:codeRepository"] = {"URL": $REPO_URL}' "${{ matrix.cwl_path }}"
-          yq -i '.["s:softwareVersion"] = $VERSION' "${{ matrix.cwl_path }}"
-          yq -i '.["s:author"] = [{"class": "s:Person", "s.name": $AUTHOR_NAME, "s.email": $AUTHOR_EMAIL, "s.affiliation": $AUTHOR_AFFIL}]' "${{ matrix.cwl_path }}"
-
-          echo "✅ Updated metadata in ${matrix.cwl_path}"
+        
+          echo "📎 REPO_URL: $REPO_URL"
+        
+          yq -i ".\"s:codeRepository\" = {\"URL\": \"$REPO_URL\"}" "${{ matrix.cwl_path }}"
+          yq -i ".\"s:softwareVersion\" = \"$VERSION\"" "${{ matrix.cwl_path }}"
+          yq -i ".\"s:author\" = [{\"class\": \"s:Person\", \"s.name\": \"$AUTHOR_NAME\", \"s.email\": \"$AUTHOR_EMAIL\", \"s.affiliation\": \"$AUTHOR_AFFIL\"}]" "${{ matrix.cwl_path }}"
+        
+          echo "✅ Updated metadata in ${{ matrix.cwl_path }}"
+        
 
       - name: Prepare Artifacts
         run: |
