@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: 3.x
 
-      - run: pip install mkdocs-material mkdocs-mermaid2-plugin mkdocs-puml-plugin
+      - run: pip install mkdocs-material mkdocs-mermaid2-plugin mkdocs_puml
 
       - name: Deploy to GitHub Pages
         run: mkdocs gh-deploy --force
