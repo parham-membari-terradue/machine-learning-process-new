@@ -1,2 +1,7 @@
 # Stage-in
-To test the inference module, the user must stage-in a sentinel-2 L1C data from the [https://dataspace.copernicus.eu](https://dataspace.copernicus.eu). The user will run a bash script and leverage the `Stars` tool to stage in the data. For more information on how the `Stars` work check its [documentation](https://github.com/Terradue/Stars).
+
+To test the inference module, the user must first **stage in Sentinel-2 L1C data** from [Copernicus Data Space](https://dataspace.copernicus.eu).
+
+This is done by running a Bash script that uses the `Stars` tool to download and prepare the data.  
+For more information on how `Stars` works, refer to its [official documentation](https://github.com/Terradue/Stars).
+
