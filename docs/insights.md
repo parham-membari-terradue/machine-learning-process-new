@@ -26,7 +26,8 @@ Outcome:
 
 Decision: Use MLFLOW exclusively for tracking the process of training workflow and selecting the best model candidate.
 
-
+### Test inference with Sentinel-2 product
+Decision: Use Stars tool to stage-in a sentinel-2 product ready to pass to inference module.
 
 
 ## Challenges and Solutions
