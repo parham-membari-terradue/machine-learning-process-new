@@ -1,4 +1,5 @@
 name: docs
+
 on:
   push:
     branches:
@@ -6,21 +7,26 @@ on:
       - main
       - master
     paths:
-      # Only rebuild website when docs have changed
       - 'docs'
       - 'mkdocs.yml'
       - .github/**
+
+permissions:
+  contents: write  # ✅ This is required to push to gh-pages
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.x
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.x
-      - run: pip install mkdocs-material mkdocs-mermaid2-plugin mkdocs_puml
-      - run: mkdocs gh-deploy --force
+
+      - run: pip install mkdocs-material mkdocs-mermaid2-plugin mkdocs-puml-plugin
+
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force
