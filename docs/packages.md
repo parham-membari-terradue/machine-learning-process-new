@@ -1,6 +1,10 @@
 # Application Packages
-There are two different application packages are provided for this tutorial:
-- `training`
+
+This tutorial provides two separate application packages:
+
+- `training`  
 - `inference`
 
-For more details on how they work, please check the documentation on how [training](./training-container.md) and [inference](./inference-container.md) were developed.
+Each application package has its own Docker image, which has been published to a dedicated GitHub Container Registry.
+
+For more details on how each package works, refer to the documentation for [training](./training-container.md) and [inference](./inference-container.md).
